@@ -15,30 +15,40 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 2. إعداد بيئة جافا (JDK 17)
+    # 2. إعداد بيئة جافا
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    # 3. تثبيت أداة Gradle محلياً على السيرفر لتوليد الملف المفقود
+    # 3. إعداد أداة Gradle
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    # 4. توليد ملف gradlew المفقود في مشروعك تلقائياً
+    # 4. توليد ملف gradlew
     - name: Generate Gradle Wrapper
       run: gradle wrapper
 
-    # 5. إعطاء صلاحية التنفيذ للملف الذي تم توليده
+    # 5. إعطاء صلاحية التنفيذ
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # 6. بناء التطبيق واستخراج الـ APK
+    # 6. حل مشكلة الـ Keystore والمستندات المفقودة (توليد ملفات وهمية للبناء)
+    - name: Create Missing Build Files
+      run: |
+        # توليد ملف debug.keystore افتراضي في المجلد الرئيسي لتخطي خطأ التوقيع
+        keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+        
+        # إنشاء ملف google-services.json وهمي في مسار التطبيق لتخطي تنبيه جوجل
+        mkdir -p app/src/
+        echo '{"project_info":{"project_number":"123","project_id":"mock-id","storage_bucket":"mock.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:123:android:123","android_client_info":{"package_name":"'"$(grep -oP 'namespace = "\K[^"]+' app/build.gradle.kts || echo "com.example.app")"'"}},"api_key":[{"current_key":"mock_key"}],"services":{"appinvite_service":{"status":1}}}]}' > app/google-services.json
+
+    # 7. بناء التطبيق بعد حل المشاكل
     - name: Build with Gradle
       run: ./gradlew assembleDebug
 
-    # 7. رفع ملف الـ APK الناتج للتحميل
+    # 8. رفع ملف الـ APK الناتج
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
