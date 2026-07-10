@@ -1,0 +1,6 @@
+{
+  "name": "Ze Sport",
+  "description": "Premium live sports streaming and scheduling application featuring live TV channels, match schedules, real-time match chats, and watchlist reminders.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
