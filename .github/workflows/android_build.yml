@@ -2,7 +2,7 @@ name: Android CI Build
 
 on:
   push:
-    branches: [ "main", "master" ] # سيعمل تلقائياً عند الدفع لفرع main أو master
+    branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
 
@@ -11,26 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. سحب كود المشروع من المستودع
+    # 1. سحب كود المشروع
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 2. إعداد بيئة جافا (JDK 17) المطلوبة لمشاريع أندرويد الحديثة
+    # 2. إعداد بيئة جافا (JDK 17)
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    # 3. إعداد أداة Gradle (تتعامل مع الصلاحيات والكاش تلقائياً لتجنب خطأ gradlew)
+    # 3. تثبيت أداة Gradle محلياً على السيرفر لتوليد الملف المفقود
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    # 4. بناء التطبيق واستخراج ملف الـ APK (نسخة التصحيح Debug)
+    # 4. توليد ملف gradlew المفقود في مشروعك تلقائياً
+    - name: Generate Gradle Wrapper
+      run: gradle wrapper
+
+    # 5. إعطاء صلاحية التنفيذ للملف الذي تم توليده
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    # 6. بناء التطبيق واستخراج الـ APK
     - name: Build with Gradle
       run: ./gradlew assembleDebug
 
-    # 5. رفع ملف الـ APK الناتج ليكون جاهزاً للتحميل من موقع GitHub
+    # 7. رفع ملف الـ APK الناتج للتحميل
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
