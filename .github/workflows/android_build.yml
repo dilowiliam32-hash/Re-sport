@@ -2,32 +2,37 @@ name: Android CI Build
 
 on:
   push:
-    branches: [ "main" ] # أو master حسب فرعك الرئيسي
+    branches: [ "main", "master" ] # سيعمل تلقائياً عند الدفع لفرع main أو master
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    # 1. سحب كود المشروع من المستودع
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-    - name: set up JDK 17
+    # 2. إعداد بيئة جافا (JDK 17) المطلوبة لمشاريع أندرويد الحديثة
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    # 3. إعداد أداة Gradle (تتعامل مع الصلاحيات والكاش تلقائياً لتجنب خطأ gradlew)
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
 
+    # 4. بناء التطبيق واستخراج ملف الـ APK (نسخة التصحيح Debug)
     - name: Build with Gradle
       run: ./gradlew assembleDebug
 
-    - name: Upload APK
+    # 5. رفع ملف الـ APK الناتج ليكون جاهزاً للتحميل من موقع GitHub
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug
+        name: android-app-debug
         path: app/build/outputs/apk/debug/app-debug.apk
